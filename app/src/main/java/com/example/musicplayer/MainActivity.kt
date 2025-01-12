@@ -12,6 +12,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import com.example.musicplayer.ui.screens.ErrorScreen
+import com.example.musicplayer.ui.screens.MP3PlayerScreen
 import com.example.musicplayer.ui.theme.MusicPlayerTheme
 
 class MainActivity : ComponentActivity() {

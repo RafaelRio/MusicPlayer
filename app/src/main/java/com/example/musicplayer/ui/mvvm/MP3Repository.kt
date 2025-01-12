@@ -1,4 +1,4 @@
-package com.example.musicplayer
+package com.example.musicplayer.ui.mvvm
 
 import android.content.Context
 import com.example.musicplayer.data.MP3File

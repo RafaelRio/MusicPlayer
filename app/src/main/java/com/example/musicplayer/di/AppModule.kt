@@ -1,7 +1,7 @@
 package com.example.musicplayer.di
 
-import com.example.musicplayer.MP3Repository
-import com.example.musicplayer.MP3ViewModel
+import com.example.musicplayer.ui.mvvm.MP3Repository
+import com.example.musicplayer.ui.mvvm.MP3ViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
