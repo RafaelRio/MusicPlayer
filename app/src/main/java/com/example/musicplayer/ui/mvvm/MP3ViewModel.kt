@@ -2,6 +2,7 @@ package com.example.musicplayer.ui.mvvm
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import androidx.annotation.OptIn
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableIntStateOf
@@ -28,6 +29,7 @@ class MP3ViewModel @Inject constructor(private val repository: MP3Repository) : 
     val error: State<String?> = _error
 
     private lateinit var exoPlayer: ExoPlayer
+    private var savedPosition: Long = 0
 
     private val _isPlaying = mutableStateOf(false)
     val isPlaying: State<Boolean> = _isPlaying
@@ -40,14 +42,12 @@ class MP3ViewModel @Inject constructor(private val repository: MP3Repository) : 
 
     fun initPlayer(context: Context) {
         exoPlayer = PlayerManager.getExoPlayer(context)
-
-        // Agregar un listener para sincronizar eventos del reproductor
         exoPlayer.addListener(object : Player.Listener {
             override fun onPlaybackStateChanged(state: Int) {
                 when (state) {
                     Player.STATE_READY -> _isPlaying.value = exoPlayer.isPlaying
                     Player.STATE_ENDED -> {
-                        // Reproduce la siguiente canción automáticamente
+                        savedPosition = 0 // Reiniciar la posición cuando termina
                         val nextIndex = (_currentPlayingIndex.intValue + 1) % _mp3Files.value.size
                         playSong(nextIndex, context)
                     }
@@ -74,43 +74,62 @@ class MP3ViewModel @Inject constructor(private val repository: MP3Repository) : 
     fun playSong(index: Int, context: Context) {
         val song = _mp3Files.value.getOrNull(index)
         if (song != null) {
+            val isSameSong = _currentPlayingIndex.intValue == index
             _currentPlayingIndex.intValue = index
             _currentPlayingSong.value = song
 
-            exoPlayer.setMediaItem(
-                androidx.media3.common.MediaItem.Builder()
-                    .setUri(song.uri)
-                    .setMediaMetadata(
-                        androidx.media3.common.MediaMetadata.Builder()
-                            .setTitle(song.name)
-                            .setArtist(song.artist)
-                            .build()
-                    ).build()
-            )
-            exoPlayer.prepare()
-            startMusicService(context, _currentPlayingSong.value!!)
-            exoPlayer.play()
+            if (!isSameSong) {
+                // Si es una canción diferente, comenzar desde el principio
+                savedPosition = 0
+                exoPlayer.setMediaItem(
+                    androidx.media3.common.MediaItem.Builder()
+                        .setUri(song.uri)
+                        .setMediaMetadata(
+                            androidx.media3.common.MediaMetadata.Builder()
+                                .setTitle(song.name)
+                                .setArtist(song.artist)
+                                .build()
+                        ).build()
+                )
+                exoPlayer.prepare()
+                startMusicService(context)
+                exoPlayer.play()
+            } else {
+                // Si es la misma canción, reanudar desde la posición guardada
+                startMusicService(context)
+                resumeSong()
+            }
         } else {
             _error.value = "No se pudo reproducir la canción"
         }
     }
 
     fun pauseSong() {
+        savedPosition = exoPlayer.currentPosition
         exoPlayer.pause()
+    }
+
+    private fun resumeSong() {
+        exoPlayer.seekTo(savedPosition)
+        exoPlayer.play()
     }
 
     override fun onCleared() {
         super.onCleared()
-        exoPlayer.release()
+        // Guardar la última posición antes de liberar el reproductor
+        if (::exoPlayer.isInitialized) {
+            savedPosition = exoPlayer.currentPosition
+            exoPlayer.release()
+        }
     }
 
     @OptIn(UnstableApi::class)
-    fun startMusicService(context: Context, song: MP3File) {
+    private fun startMusicService(context: Context) {
         val intent = Intent(context, MusicService::class.java)
-        // Agregar la información de la canción al intent
-        intent.putExtra("song_uri", song.uri.toString())  // Asegúrate de que URI sea un String
-        intent.putExtra("song_title", song.name ?: "Desconocido")
-        intent.putExtra("song_artist", song.artist ?: "Desconocido")
-        context.startForegroundService(intent)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(intent)
+        } else {
+            context.startService(intent)
+        }
     }
 }
