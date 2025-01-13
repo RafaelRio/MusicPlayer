@@ -15,7 +15,9 @@ import androidx.core.content.ContextCompat
 import com.example.musicplayer.ui.screens.ErrorScreen
 import com.example.musicplayer.ui.screens.MP3PlayerScreen
 import com.example.musicplayer.ui.theme.MusicPlayerTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()

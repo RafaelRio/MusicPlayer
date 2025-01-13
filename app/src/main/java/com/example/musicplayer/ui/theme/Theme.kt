@@ -1,5 +1,7 @@
 package com.example.musicplayer.ui.theme
 
+import android.app.Activity
+import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
@@ -7,7 +9,12 @@ import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 import com.google.accompanist.systemuicontroller.SystemUiController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
@@ -46,9 +53,9 @@ fun MusicPlayerTheme(
     content: @Composable () -> Unit
 ) {
     val colors = if (useDarkTheme) DarkColorScheme else LightColorScheme
-    rememberSystemUiController().setSystemBarsColor(Color.White)
-    val systemUiController: SystemUiController = rememberSystemUiController()
-    systemUiController.setSystemBarsColor(colors.primary)
+    rememberSystemUiController().setSystemBarsColor(colors.primary)
+    rememberSystemUiController().setNavigationBarColor(colors.tertiaryContainer)
+
     MaterialTheme(
         colorScheme = colors,
         typography = Typography, // Puedes usar la tipografía predeterminada o definir la tuya

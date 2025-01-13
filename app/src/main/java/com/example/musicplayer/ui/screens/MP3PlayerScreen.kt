@@ -7,9 +7,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -38,16 +40,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.example.musicplayer.ui.mvvm.MP3ViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.musicplayer.data.MP3File
-import org.koin.androidx.compose.getViewModel
+import com.example.musicplayer.ui.mvvm.MP3ViewModel
+import kotlin.math.floor
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MP3PlayerScreen(viewModel: MP3ViewModel = getViewModel()) {
+fun MP3PlayerScreen(viewModel: MP3ViewModel = hiltViewModel()) {
 
     val mp3List: List<MP3File> by viewModel.mp3Files
-
     val isPlaying by viewModel.isPlaying
     val context = LocalContext.current
     val error by viewModel.error
@@ -58,7 +61,7 @@ fun MP3PlayerScreen(viewModel: MP3ViewModel = getViewModel()) {
         viewModel.getMusic()
     }
 
-    Scaffold(topBar = {
+    Scaffold(contentWindowInsets = WindowInsets.safeDrawing, topBar = {
         TopAppBar(
             title = {
                 Text("Reproductor de música")
@@ -217,6 +220,11 @@ fun MP3ListItem(file: MP3File, isPlaying: Boolean, onClick: () -> Unit) {
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
+                Text(
+                    text = convertTimestampToDuration(file.duration.toLong()),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
                 file.isFromWhatsapp.let { whatsapp ->
                     if (whatsapp) {
                         Text(
@@ -231,4 +239,11 @@ fun MP3ListItem(file: MP3File, isPlaying: Boolean, onClick: () -> Unit) {
         }
     }
 
+}
+
+fun convertTimestampToDuration(position: Long): String {
+    val seconds = floor(position / 1E3).toInt()
+    val minutes = seconds / 60
+    val remainingTimeSeconds = seconds - (minutes * 60)
+    return if (position < 0) "--:--" else "%d:%02d".format(minutes, remainingTimeSeconds)
 }

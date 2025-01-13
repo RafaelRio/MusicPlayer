@@ -8,6 +8,8 @@
 
     <!-- For Android 13 and above -->
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
 
     <application
         android:name=".MP3App"
@@ -20,6 +22,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.MusicPlayer">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

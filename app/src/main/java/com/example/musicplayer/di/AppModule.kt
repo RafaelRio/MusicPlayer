@@ -1,16 +1,21 @@
 package com.example.musicplayer.di
 
-import com.example.musicplayer.ui.mvvm.MP3Repository
-import com.example.musicplayer.ui.mvvm.MP3ViewModel
-import org.koin.androidx.viewmodel.dsl.viewModel
-import org.koin.dsl.module
+import android.content.Context
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 
-val appModule = module {
+@Module
+@InstallIn(SingletonComponent::class)
+object AppModule {
 
-    // Proveer el MP3Repository
-    single { MP3Repository(get()) }
-
-    // Proveer el MusicViewModel
-    viewModel { MP3ViewModel(get()) }
+    @Provides
+    @Singleton
+    fun provideContext(@ApplicationContext context: Context): Context {
+        return context
+    }
 }

@@ -8,9 +8,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.musicplayer.data.MP3File
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class MP3ViewModel(private val repository: MP3Repository): ViewModel() {
+@HiltViewModel
+class MP3ViewModel @Inject constructor(private val repository: MP3Repository): ViewModel() {
 
     private val _mp3Files = mutableStateOf<List<MP3File>>(emptyList())
     val mp3Files: State<List<MP3File>> = _mp3Files
@@ -18,11 +21,11 @@ class MP3ViewModel(private val repository: MP3Repository): ViewModel() {
     private val _error = mutableStateOf<String?>(null)
     val error: State<String?> = _error
 
-    private val _isPlaying = mutableStateOf(false)
-    val isPlaying: State<Boolean> = _isPlaying
-
     private val _mediaPlayer = mutableStateOf(MediaPlayer())
     val mediaPlayer: State<MediaPlayer> = _mediaPlayer
+
+    private val _isPlaying = mutableStateOf(false)
+    val isPlaying: State<Boolean> = _isPlaying
 
     private val _currentPlayingSong = mutableStateOf<MP3File?>(null)
     val currentPlayingSong: State<MP3File?> = _currentPlayingSong
@@ -79,5 +82,10 @@ class MP3ViewModel(private val repository: MP3Repository): ViewModel() {
             _mediaPlayer.value.pause()
             _isPlaying.value = false
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        _mediaPlayer.value.release()
     }
 }

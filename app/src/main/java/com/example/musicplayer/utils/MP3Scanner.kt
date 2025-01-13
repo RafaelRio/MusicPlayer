@@ -33,7 +33,8 @@ class MP3Scanner(private val context: Context) {
             MediaStore.Audio.Media._ID,
             MediaStore.Audio.Media.DISPLAY_NAME,
             MediaStore.Audio.Media.ARTIST,
-            MediaStore.Audio.Media.ALBUM
+            MediaStore.Audio.Media.ALBUM,
+            MediaStore.Audio.Media.DURATION
         )
         val selection = "${MediaStore.Audio.Media.MIME_TYPE} = ?"
         val selectionArgs = arrayOf("audio/mpeg")
@@ -51,14 +52,17 @@ class MP3Scanner(private val context: Context) {
                 val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)
                 val artistColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
                 val albumColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
+                val durationColumn =
+                    cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DURATION)
 
                 while (cursor.moveToNext()) {
                     val id = cursor.getLong(idColumn)
                     val name = cursor.getString(nameColumn)
                     val artist = cursor.getString(artistColumn)
                     val album = cursor.getString(albumColumn)
+                    val duration = cursor.getInt(durationColumn)
                     val contentUri = Uri.withAppendedPath(collection, id.toString())
-                    mp3Files.add(MP3File(contentUri, name, artist, album, album == "WhatsApp Audio"))
+                    mp3Files.add(MP3File(contentUri, name, duration, artist, album, album == "WhatsApp Audio"))
                 }
             }
             Log.d("MP3Scanner", "MP3 files found: ${mp3Files.size}")
