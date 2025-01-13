@@ -58,6 +58,7 @@ fun MP3PlayerScreen(viewModel: MP3ViewModel = hiltViewModel()) {
     val currentIndex by viewModel.currentPlayingIndex
 
     LaunchedEffect(Unit) {
+        viewModel.initPlayer(context)
         viewModel.getMusic()
     }
 
