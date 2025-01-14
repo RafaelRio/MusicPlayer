@@ -3,12 +3,14 @@ package com.example.musicplayer.ui.mvvm
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import androidx.annotation.OptIn
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
@@ -42,6 +44,8 @@ class MP3ViewModel @Inject constructor(private val repository: MP3Repository) : 
 
     fun initPlayer(context: Context) {
         exoPlayer = PlayerManager.getExoPlayer(context)
+        _currentPlayingSong.value = null
+        _currentPlayingIndex.intValue = -1
         exoPlayer.addListener(object : Player.Listener {
             override fun onPlaybackStateChanged(state: Int) {
                 when (state) {
@@ -52,6 +56,11 @@ class MP3ViewModel @Inject constructor(private val repository: MP3Repository) : 
                         playSong(nextIndex, context)
                     }
                 }
+            }
+
+            override fun onPlayerError(error: PlaybackException) {
+                super.onPlayerError(error)
+                Log.e("MP3ViewModel", "Error en ExoPlayer: ${error.message}")
             }
 
             override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -74,32 +83,46 @@ class MP3ViewModel @Inject constructor(private val repository: MP3Repository) : 
     fun playSong(index: Int, context: Context) {
         val song = _mp3Files.value.getOrNull(index)
         if (song != null) {
-            val isSameSong = _currentPlayingIndex.intValue == index
+            Log.d("MP3ViewModel", "Intentando reproducir canción: ${song.name}, índice: $index")
+            Log.d(
+                "MP3ViewModel",
+                "Canción actual: ${_currentPlayingSong.value?.name}, índice actual: ${_currentPlayingIndex.intValue}"
+            )
+
+
+            // Configurar siempre el MediaItem en el reproductor
+            Log.d("MP3ViewModel", "Configurando el MediaItem para la canción: ${song.name}")
+            exoPlayer.setMediaItem(
+                androidx.media3.common.MediaItem.Builder()
+                    .setUri(song.uri)
+                    .setMediaMetadata(
+                        androidx.media3.common.MediaMetadata.Builder()
+                            .setTitle(song.name)
+                            .setArtist(song.artist)
+                            .build()
+                    ).build()
+            )
+            exoPlayer.prepare()
+            if (_currentPlayingSong.value == song) {
+                startMusicService(context)
+                resumeSong()
+
+            } else {
+                exoPlayer.seekTo(0)
+                exoPlayer.play()
+            }
+            // Actualizar siempre el estado del índice y la canción actuales
             _currentPlayingIndex.intValue = index
             _currentPlayingSong.value = song
 
-            if (!isSameSong) {
-                // Si es una canción diferente, comenzar desde el principio
-                savedPosition = 0
-                exoPlayer.setMediaItem(
-                    androidx.media3.common.MediaItem.Builder()
-                        .setUri(song.uri)
-                        .setMediaMetadata(
-                            androidx.media3.common.MediaMetadata.Builder()
-                                .setTitle(song.name)
-                                .setArtist(song.artist)
-                                .build()
-                        ).build()
-                )
-                exoPlayer.prepare()
-                startMusicService(context)
-                exoPlayer.play()
-            } else {
-                // Si es la misma canción, reanudar desde la posición guardada
-                startMusicService(context)
-                resumeSong()
-            }
+
+            // Iniciar la reproducción
+            Log.d("MP3ViewModel", "Iniciando la reproducción desde el principio")
+
+
+            _isPlaying.value = true
         } else {
+            Log.d("MP3ViewModel", "No se encontró la canción en el índice: $index")
             _error.value = "No se pudo reproducir la canción"
         }
     }
@@ -107,11 +130,13 @@ class MP3ViewModel @Inject constructor(private val repository: MP3Repository) : 
     fun pauseSong() {
         savedPosition = exoPlayer.currentPosition
         exoPlayer.pause()
+        _isPlaying.value = false
     }
 
     private fun resumeSong() {
         exoPlayer.seekTo(savedPosition)
         exoPlayer.play()
+        _isPlaying.value = true
     }
 
     override fun onCleared() {
@@ -121,6 +146,10 @@ class MP3ViewModel @Inject constructor(private val repository: MP3Repository) : 
             savedPosition = exoPlayer.currentPosition
             exoPlayer.release()
         }
+    }
+
+    fun updateList(newList: List<MP3File>) {
+        _mp3Files.value = newList
     }
 
     @OptIn(UnstableApi::class)

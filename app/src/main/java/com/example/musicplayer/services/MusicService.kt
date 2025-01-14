@@ -17,6 +17,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerNotificationManager
 import com.example.musicplayer.MainActivity
+import com.example.musicplayer.R
 import com.example.musicplayer.utils.PlayerManager
 
 @UnstableApi
@@ -89,7 +90,7 @@ class MusicService : Service() {
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(player.mediaMetadata.title ?: "Desconocido")
             .setContentText(player.mediaMetadata.artist ?: "Artista desconocido")
-            .setSmallIcon(androidx.media3.ui.R.drawable.exo_notification_small_icon)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)

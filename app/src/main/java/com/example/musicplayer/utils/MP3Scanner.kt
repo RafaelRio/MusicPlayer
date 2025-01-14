@@ -1,6 +1,9 @@
 package com.example.musicplayer.utils
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
@@ -62,7 +65,13 @@ class MP3Scanner(private val context: Context) {
                     val album = cursor.getString(albumColumn)
                     val duration = cursor.getInt(durationColumn)
                     val contentUri = Uri.withAppendedPath(collection, id.toString())
-                    mp3Files.add(MP3File(contentUri, name, duration, artist, album, album == "WhatsApp Audio"))
+                    val coverBytes = MediaMetadataRetriever().apply {
+                        setDataSource(context, contentUri)
+                    }.embeddedPicture
+                    val songCover: Bitmap? = if (coverBytes != null)
+                        BitmapFactory.decodeByteArray(coverBytes, 0, coverBytes.size) else null
+
+                    mp3Files.add(MP3File(contentUri, name, duration, artist, album, album == "WhatsApp Audio", songCover))
                 }
             }
             Log.d("MP3Scanner", "MP3 files found: ${mp3Files.size}")
